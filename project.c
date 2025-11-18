@@ -263,13 +263,19 @@ void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,
 /* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
-    /*
-    Perform:
-        PC = PC + 4
-        If Branch == 1 AND Zero == 1:
-        PC += extended_value << 2
-        If Jump == 1:
-        PC = (PC & 0xF0000000) | (jsec << 2);
-    */
+	// Every cycle, PC increments by 4 
+	*PC = *PC + 4;
+	
+	// Branch beq 
+	If (Branch == 1 && Zero == 1)
+	{
+		// offset is word-based so we shift left 2 bits
+		*PC = *PC + (extended_value << 2);
+	}	
+    // Jump
+	if (Jump == 1)
+	{
+		// Replace low 28 bits with jsec << 2, keep upper 4 bits
+		*PC = (*PC & 0xF0000000) | (jsec << 2);
+	}
 }
-
