@@ -218,7 +218,7 @@ else
 	operand2 = extended_value;
 
 // Determine ALU control signal
-switch (ALUop) 
+switch (ALUOp)
 {
 	case 0: ALUControl = 0; break;     // addition 
 	case 1: ALUControl = 1; break;     // subtraction
@@ -233,7 +233,7 @@ switch (ALUop)
 		{
 			case 32: ALUControl = 0; break;    // add
 			case 34: ALUControl = 1; break;    // subtraction
-			case 36: ALUControl = 4; break     // and 
+			case 36: ALUControl = 4; break;     // and 
 			case 37: ALUControl = 5; break;    // or 
 			case 42: ALUControl = 2; break;    // slt 
 			case 43: ALUControl = 3; break;    // sltu 
