@@ -225,20 +225,32 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-    /*
-    If MemRead == 1:
-        ensure address is word aligned
-        ensure address is legal(within memory bounds 0-65535)
-        memdata = Mem[ALUresult >> 2]
-    If MemWrite == 1:
-        ensure address is aligned
-        ensure address is legal (within memory bounds 0–65535)
-        Mem[ALUresult >> 2] = data2
-    else do nothing
-    If illegal memory access → return 1 (HALT)
-    else return 0
-    */
-}
+	if (ALUresult > 65535 || ALUresult + 3 > 65535)
+		return 1; // Allows halt 
+	//
+	if (ALUresult % 4 != 0)
+		return 1; //Allows halt
+	if (MemRead == 1)
+	{
+		unsigned addr = ALUresult;
+		*memdata =
+			(Mem[addr]      << 24) |
+			(Mem[addr+1]  << 16) | 
+			(Mem[addr+2]  <<   8) |
+			(Mem[addr+3]);
+	}
+	if (MemWrite == 1)
+	{
+		unsigned addr = ALUresult;
+		//Stores big-endian
+		Mem[addr]       = (data2 >> 24) & 0xFF;
+		Mem[addr+1]   = (data2 >> 16) & 0xFF;
+		Mem[addr+2]   = (data2 >>   8) & 0xFF;
+		Mem[addr+3]   = data2             & 0xFF;
+	}
+	
+	return 0; //If successful, no halt
+} 
 
 // Write the final result back to a register
 /* Write Register */
