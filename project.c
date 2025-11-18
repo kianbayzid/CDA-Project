@@ -207,17 +207,48 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 /* 10 Points */
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
-    /*
-    1. Choose the correct second operand for the ALU
-        If ALUSrc == 0 → use data2
-        If ALUSrc == 1 → use extended_value (for addi, lw, sw) or 
-        OR funct if 
-    2. Determine which ALU operation to perform
-        ALUOp (telling you the ALU operation category)
-        funct field (only used for R-type instructions)
-    3. Call ALU
-    4. Return HALT condition
-    */
+unsigned operand2;
+char ALUControl;
+int halt = 0;
+
+// Choose operand 2
+if (ALUSrc == 0)
+	operand2 = data2; 
+else 
+	operand2 = extended_value;
+
+// Determine ALU control signal
+switch (ALUop) 
+{
+	case 0: ALUControl = 0; break;     // addition 
+	case 1: ALUControl = 1; break;     // subtraction
+	case 2: ALUControl = 2; break;     // slt
+	case 3: ALUControl = 3; break;     // sltu
+	case 4: ALUControl = 4; break;     // and
+	case 5: ALUControl = 5; break;     // or
+	case 6: ALUControl = 6; break;     // shift
+
+	case 7: 
+		switch (funct)
+		{
+			case 32: ALUControl = 0; break;    // add
+			case 34: ALUControl = 1; break;    // subtraction
+			case 36: ALUControl = 4; break     // and 
+			case 37: ALUControl = 5; break;    // or 
+			case 42: ALUControl = 2; break;    // slt 
+			case 43: ALUControl = 3; break;    // sltu 
+			default:
+				return 1;  //Halts with illegal R-type
+		}
+		break; 
+	
+	default: 
+		return 1;  //illegal ALUop
+	}
+
+	ALU(data1, operand2, ALUControl, ALUresult, Zero); 
+
+	return halt; 
 }
 
 // Load from memory or store to memory safely
