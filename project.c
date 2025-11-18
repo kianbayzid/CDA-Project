@@ -267,7 +267,7 @@ void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char 
 	*PC = *PC + 4;
 	
 	// Branch beq 
-	If (Branch == 1 && Zero == 1)
+	if (Branch == 1 && Zero == 1)
 	{
 		// offset is word-based so we shift left 2 bits
 		*PC = *PC + (extended_value << 2);
