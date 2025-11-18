@@ -42,13 +42,26 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
    *Zero = (*ALUresult == 0) ? 1 : 0;
 }
 
-// Takes PC & Mem array to check word-alignment, memory range verification, 
+// Takes PC to check word-alignment, memory range verification, 
 // where word is loaded properly, halt if illegal
 /* instruction fetch */
 /* 10 Points */
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
-    //What is PC
+    //Checks word Alignment (factor of 4)
+    if (PC & 0x3) {
+        return 1;
+    }
+
+    //Checks if PC is within 64KB range
+    if (PC > 0xFFFF){
+        return 1;
+    }
+    //Fetches after checking
+    //Mem[PC >> 2] is derefrencing to Mem
+    *instruction = Mem[PC >> 2];
+
+    return 0;
 }
 
 //Uses 32-bit instructions to extract fields
@@ -80,11 +93,81 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 //Sets control signals
 /* instruction decode */
 /* 15 Points */
-int instruction_decode(unsigned op,struct_controls *controls)
+    int instruction_decode(unsigned op, struct_controls *controls)
 {
-    // Use the instruction list in PDF Appendix A.
-    // Read op and setRegDstJump, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, RegWrite
-    // HALT if opcode is NONE of the 14 allowed, return 1
+    /*
+    Use the instruction list in PDF Appendix A.
+    Read op and setRegDstJump, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, RegWrite
+    HALT if opcode is NONE of the 14 allowed, return 1
+    */
+
+    // Default all control signals to 0
+    controls->RegDst   = 0;
+    controls->Jump     = 0;
+    controls->Branch   = 0;
+    controls->MemRead  = 0;
+    controls->MemtoReg = 0;
+    controls->ALUOp    = 0;
+    controls->MemWrite = 0;
+    controls->ALUSrc   = 0;
+    controls->RegWrite = 0;
+
+    switch (op) {
+    case 0x00: // R-type
+        controls->RegDst = 1;
+        controls->RegWrite = 1;
+        controls->ALUSrc = 0;
+        controls->ALUOp = 0x7; // R-type
+        break;
+
+    case 0x23: // lw
+        controls->RegDst = 0;
+        controls->MemRead = 1;
+        controls->MemtoReg = 1;
+        controls->ALUSrc = 1;
+        controls->RegWrite = 1;
+        controls->ALUOp = 0;
+        break;
+
+    case 0x2B: // sw
+        controls->MemWrite = 1;
+        controls->ALUSrc = 1;
+        controls->ALUOp = 0;
+        //Don't care cases, not needed but included
+        controls->RegDst   = 2; // don't care
+        controls->MemtoReg = 2; // don't care
+        break;
+
+    case 0x04: // beq
+        controls->Branch = 1;
+        controls->ALUSrc = 0;
+        controls->ALUOp = 1;
+        //Don't care cases, not needed but included
+        controls->RegDst   = 2; // don't care
+        controls->MemtoReg = 2; // don't care
+        break;
+
+    case 0x02: // j
+        controls->Jump = 1;
+        //Don't care cases, not needed but included
+        controls->RegDst   = 2; // don't care
+        controls->MemtoReg = 2; // don't care
+        controls->ALUSrc   = 2; // don't care
+        controls->ALUOp    = 0; // don't care
+        break;
+
+    case 0x08: // addi
+        controls->RegDst = 0;
+        controls->RegWrite = 1;
+        controls->ALUSrc = 1;
+        controls->ALUOp = 0;
+        break;
+
+    default:
+        return 1; // illegal instruction → halt
+    }
+
+    return 0;
 }
 
 // Sets incoming data to Registers 1 & 2
@@ -92,8 +175,11 @@ int instruction_decode(unsigned op,struct_controls *controls)
 /* 5 Points */
 void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigned *data2)
 {
-    data1 = Reg[r1];
-    data2 = Reg[r2];
+    //Pointer since we're trying to write to that location
+    // Read value in register r1 into data1
+    *data1 = Reg[r1];
+    // Read value in register r2 into data2
+    *data2 = Reg[r2];
 }
 
 // Sign-extend 16-bit offset → 32-bit integer.
@@ -102,6 +188,18 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
     //If offset bit 15 is 1 → fill top bits with 1’s.
+        // Check if the sign bit (bit 15) is 1
+    //Checks offset against mask 15th bit 0x8000
+    if (offset & 0x8000) {
+        // Negative number → extend with 1's
+        //OR bc 0 OR X = X also 1 OR X = 1
+        *extended_value = offset | 0xFFFF0000;
+    }
+    else {
+        // Positive number → extend with 0's
+        //AND bc 0 AND X = 0 also 1 AND X = X
+        *extended_value = offset & 0xFFFF;
+    }
 }
 
 // Decides what the ALU should do and runs ALU
