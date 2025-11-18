@@ -243,7 +243,8 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 // Write the final result back to a register
 /* Write Register */
 /* 10 Points */
-void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
+
+void write_register(unsigned r2, unsigned r3, unsigned memdata, unsigned ALUresult, char RegWrite, char RegDst, char MemtoReg, unsigned *Reg)
 {
     /*
     If RegWrite == 1:
@@ -255,6 +256,35 @@ void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,
             else → ALUresult
         Write to Reg[dest], unless dest = $0. $0 must never change
     */
+
+    if (RegWrite == 1) {
+
+        unsigned dest;
+        unsigned val;
+
+        //Choose destination
+
+        if (RegDst == 1) {
+            dest = r3;
+        }
+        else if (RegDst == 0)
+            dest = r2;
+
+        //$0 does not change
+        if (dest == 0) {
+            return;
+        }
+
+        //Choose value
+        if (MemtoReg == 1) {
+            val = memdata;
+        }
+        else
+            val = ALUresult;
+
+        //Write to Reg[dest]
+        Reg[dest] = val;
+    } 
 }
 
 
