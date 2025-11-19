@@ -216,51 +216,83 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 // Decides what the ALU should do and runs ALU
 /* ALU operations */
 /* 10 Points */
-int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
+int ALU_operations(unsigned data1,unsigned data2, unsigned extended_value, unsigned funct, char ALUOp, char ALUSrc, unsigned *ALUresult, char *Zero)
 {
-unsigned operand2;
-char ALUControl;
-int halt = 0;
+    unsigned operand2;
+    unsigned ALUControl;
 
-// Choose operand 2
-if (ALUSrc == 0)
-	operand2 = data2; 
-else 
-	operand2 = extended_value;
+    /* Select second ALU operand based on ALUSrc */
+    if (ALUSrc == 1) {
+        operand2 = extended_value;   // immediate path
+    } else {
+        operand2 = data2;         // register path
+    }
 
-// Determine ALU control signal
-switch (ALUOp)
-{
-	case 0: ALUControl = 0; break;     // addition 
-	case 1: ALUControl = 1; break;     // subtraction
-	case 2: ALUControl = 2; break;     // slt
-	case 3: ALUControl = 3; break;     // sltu
-	case 4: ALUControl = 4; break;     // and
-	case 5: ALUControl = 5; break;     // or
-	case 6: ALUControl = 6; break;     // shift
+    /* Decide ALUControl based on ALUOp (and funct for R-type) */
+    switch (ALUOp) {
+        case 0:  // ADD (addi, lw, sw)
+            ALUControl = 0;
+            break;
 
-	case 7: 
-		switch (funct)
-		{
-			case 32: ALUControl = 0; break;    // add
-			case 34: ALUControl = 1; break;    // subtraction
-			case 36: ALUControl = 4; break;     // and 
-			case 37: ALUControl = 5; break;    // or 
-			case 42: ALUControl = 2; break;    // slt 
-			case 43: ALUControl = 3; break;    // sltu 
-			default:
-				return 1;  //Halts with illegal R-type
-		}
-		break; 
-	
-	default: 
-		return 1;  //illegal ALUop
-	}
+        case 1:  // SUB (beq)
+            ALUControl = 1;
+            break;
 
-	ALU(data1, operand2, ALUControl, ALUresult, Zero); 
+        case 2:  // SLT immediate
+            ALUControl = 2;
+            break;
 
-	return halt; 
+        case 3:  // SLTU immediate
+            ALUControl = 3;
+            break;
+
+        case 4:  // AND immediate
+            ALUControl = 4;
+            break;
+
+        case 5:  // OR immediate
+            ALUControl = 5;
+            break;
+
+        case 6:  // LUI: shift left 16
+            ALUControl = 6;
+            break;
+
+        case 7:  // R-type: use funct field
+            switch (funct) {
+                case 32: // 0x20: add
+                    ALUControl = 0;
+                    break;
+                case 34: // 0x22: sub
+                    ALUControl = 1;
+                    break;
+                case 36: // 0x24: and
+                    ALUControl = 4;
+                    break;
+                case 37: // 0x25: or
+                    ALUControl = 5;
+                    break;
+                case 42: // 0x2A: slt
+                    ALUControl = 2;
+                    break;
+                case 43: // 0x2B: sltu
+                    ALUControl = 3;
+                    break;
+                default:
+                    return 1;  // illegal R-type funct
+            }
+            break;
+
+        default:
+            return 1;  // illegal ALUOp
+    }
+
+    /* Actually perform the ALU operation */
+    ALU(data1, operand2, ALUControl, ALUresult, Zero);
+
+    return 0;  // no halt
 }
+
 
 // Load from memory or store to memory safely
 /* Read / Write Memory */
