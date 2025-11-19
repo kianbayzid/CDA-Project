@@ -162,6 +162,17 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
         controls->ALUSrc = 1;
         controls->ALUOp = 0;
         break;
+    case  0x0F: // lui
+        controls->RegDst   = 0;   // destination is rt
+        controls->RegWrite = 1;   // write to register
+        controls->ALUSrc   = 1;   // use immediate
+        controls->MemRead  = 0;
+        controls->MemWrite = 0;
+        controls->MemtoReg = 0;   // write ALU result
+        controls->Branch   = 0;
+        controls->Jump     = 0;
+        controls->ALUOp    = 6;   // 110: shift left extended_value by 16
+        break;
 
     default:
         return 1; // illegal instruction → halt
