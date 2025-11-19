@@ -256,32 +256,31 @@ switch (ALUOp)
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-	if (ALUresult > 65535 || ALUresult + 3 > 65535)
-		return 1; // Allows halt 
-	//
-	if (ALUresult % 4 != 0)
-		return 1; //Allows halt
-	if (MemRead == 1)
-	{
-		unsigned addr = ALUresult;
-		*memdata =
-			(Mem[addr]      << 24) |
-			(Mem[addr+1]  << 16) | 
-			(Mem[addr+2]  <<   8) |
-			(Mem[addr+3]);
-	}
-	if (MemWrite == 1)
-	{
-		unsigned addr = ALUresult;
-		//Stores big-endian
-		Mem[addr]       = (data2 >> 24) & 0xFF;
-		Mem[addr+1]   = (data2 >> 16) & 0xFF;
-		Mem[addr+2]   = (data2 >>   8) & 0xFF;
-		Mem[addr+3]   = data2             & 0xFF;
-	}
-	
-	return 0; //If successful, no halt
-} 
+    // Check if address is within valid range
+    if (ALUresult > 0xFFFF) {
+        return 1; // Halt - address out of range
+    }
+    
+    // Check word alignment
+    if (ALUresult % 4 != 0) {
+        return 1; // Halt - not word aligned
+    }
+    
+    // Convert byte address to word index
+    unsigned word_index = ALUresult >> 2;
+    
+    if (MemRead == 1) {
+        // Load word from memory
+        *memdata = Mem[word_index];
+    }
+    
+    if (MemWrite == 1) {
+        // Store word to memory
+        Mem[word_index] = data2;
+    }
+    
+    return 0; // Success
+}
 
 // Write the final result back to a register
 /* Write Register */
