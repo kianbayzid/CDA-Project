@@ -80,13 +80,13 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
         15-0	offset  (16 bits)
         25-0	jsec    (26 bits)
     */
-    op = instruction >> 26;
-    r1 = (instruction >> 21) & 0x1F;
-    r2 = (instruction >> 16) & 0x1F;
-    r3 = (instruction >> 11) & 0x1F;
-    funct = instruction & 0x3F;   // 0x3F = 6 bits of 1’s
-    offset = instruction & 0xFFFF;   // 16 bits
-    jsec = instruction & 0x3FFFFFF;
+    *op = instruction >> 26;
+    *r1 = (instruction >> 21) & 0x1F;
+    *r2 = (instruction >> 16) & 0x1F;
+    *r3 = (instruction >> 11) & 0x1F;
+    *funct = instruction & 0x3F;   // 0x3F = 6 bits of 1’s
+    *offset = instruction & 0xFFFF;   // 16 bits
+    *jsec = instruction & 0x3FFFFFF;
 }
 
 
