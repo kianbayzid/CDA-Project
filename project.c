@@ -256,6 +256,10 @@ switch (ALUOp)
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
+    if (MemRead == 0 && MemWrite == 0) {
+        // No memory operation, just return success
+        return 0;
+    }
     // Check if address is within valid range
     if (ALUresult > 0xFFFF) {
         return 1; // Halt - address out of range
