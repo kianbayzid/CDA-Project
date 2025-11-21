@@ -173,7 +173,21 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
         controls->Jump     = 0;
         controls->ALUOp    = 6;   // 110: shift left extended_value by 16
         break;
-
+		
+	case 0x0A: // slti
+		controls->RegDst = 0;
+		controls->RegWrite = 1;
+		controls->ALUSrc = 1;
+		controls->ALUOp = 2;      // use ALUOp 2 for SLT (signed)
+		break;
+		
+	case 0x0B: // sltiu
+		controls->RegDst = 0;
+		controls->RegWrite = 1;
+		controls->ALUSrc = 1;
+		controls->ALUOp = 3;     // use ALUOp 3 -> SLTU (unsigned)
+		break;
+		
     default:
         return 1; // illegal instruction → halt
     }
